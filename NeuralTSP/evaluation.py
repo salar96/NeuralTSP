@@ -64,7 +64,8 @@ if __name__ == "__main__":
 
     model = TSPNet(input_dim, hidden_dim, device, num_layers, num_layers, num_heads)
     model.load_state_dict(torch.load('best_model.pth'))
+    model.eval()
     print('model loaded')
-    data = torch.rand(10,4,2).to(device)
+    data = torch.rand(10,100,2).to(device)
     _, actions = model(data,mod='eval')
     plot_routes(data.cpu(),actions.cpu(),torch.arange(10))
