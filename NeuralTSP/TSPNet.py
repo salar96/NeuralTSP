@@ -17,7 +17,7 @@ class Decoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, num_heads):
         super(Decoder,self).__init__()
         self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first= True, dropout= 0.2)
-        self.attn = nn.MultiheadAttention(hidden_dim, num_heads, dropout= 0.1, batch_first= True)
+        self.attn = nn.MultiheadAttention(hidden_dim, num_heads, dropout= 0.2, batch_first= True)
 
     def forward(self, x, enc_outs, h0, c0, indices_to_ignore):
         # LSTM output
