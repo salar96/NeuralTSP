@@ -2,7 +2,7 @@
 import torch
 from TSPNet import TSPNet
 from matplotlib import pyplot as plt
-
+from utils import route_cost
 import os
 import matplotlib.pyplot as plt
 
@@ -30,8 +30,8 @@ def plot_routes(cities, routes, index_range, save_folder='plots'):
         # Plot cities
         plt.figure(figsize=(8, 6))
         plt.scatter(cities_batch[:, 0], cities_batch[:, 1], color='blue', zorder=2, label='Cities')
-        for i, (x, y) in enumerate(cities_batch):
-            plt.text(x, y, f'{i}', fontsize=12, ha='right', color='black')
+        # for i, (x, y) in enumerate(cities_batch):
+        #     plt.text(x, y, f'{i}', fontsize=12, ha='right', color='black')
 
         # Plot the route
         plt.plot(ordered_cities[:, 0], ordered_cities[:, 1], color='red', linestyle='--', zorder=1, label='Route')
@@ -40,7 +40,7 @@ def plot_routes(cities, routes, index_range, save_folder='plots'):
         plt.scatter(ordered_cities[0, 0], ordered_cities[0, 1], color='green', s=100, label='Start', zorder=3)
         plt.scatter(ordered_cities[-1, 0], ordered_cities[-1, 1], color='purple', s=100, label='End', zorder=3)
 
-        plt.title(f"Route for Batch {batch_index}")
+        plt.title(f"Route for Batch {batch_index} cost: {route_cost(cities[batch_index:batch_index+1],routes[batch_index:batch_index+1])[0]:.2f}")
         plt.xlabel("X Coordinate")
         plt.ylabel("Y Coordinate")
         plt.axis('off')
@@ -63,9 +63,9 @@ if __name__ == "__main__":
     print("Running on: " , device)
 
     model = TSPNet(input_dim, hidden_dim, device, num_layers, num_layers, num_heads)
-    model.load_state_dict(torch.load('best_model.pth'))
+    model.load_state_dict(torch.load('Saved models/0.12025_01_29 13_58_58best_model.pth'))
     model.eval()
     print('model loaded')
-    data = torch.rand(10,50,2).to(device)
+    data = torch.rand(10,200,2).to(device)
     _, actions = model(data,mod='eval')
     plot_routes(data.cpu(),actions.cpu(),torch.arange(10))

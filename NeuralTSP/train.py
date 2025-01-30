@@ -3,20 +3,21 @@ import torch
 from torch import optim
 from utils import route_cost
 from datetime import datetime
-
+from torch_optimizer import RAdam
 
 
 
 def train(model, preloaded_batches, writer, lr = 0.001, len_print = 100, use_base = True, alpha = 0.9):
     device = model.device
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    # optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = RAdam(model.parameters(), lr=lr)
     print(" Training Started with Base and alpha: ",use_base , alpha)
     batch_means = torch.zeros(len_print)
     best_mean_cost = float('inf')  # Initialize with infinity
     best_model_state = None
     Base = torch.tensor([0.0],device = device)
     
-    for episode, data_batch in enumerate(preloaded_batches):
+    for episode, data_batch in tqdm(enumerate(preloaded_batches)):
         #data_batch = data_batch.to(device, non_blocking=True)
         outs, actions = model(data_batch, mod = 'train')
         
@@ -41,16 +42,16 @@ def train(model, preloaded_batches, writer, lr = 0.001, len_print = 100, use_bas
               
             else:
               Base = alpha * Base + (1-alpha) * mean_cost
-            print(f"Episode: {episode} Mean cost: {mean_cost:.2f}")
+            print(f"Episode: {episode+1} Mean cost: {mean_cost:.2f}")
             writer.add_scalar('Mean cost', mean_cost, episode)
             if mean_cost < best_mean_cost:
                 best_mean_cost = mean_cost
                 best_model_state = model.state_dict()
     if best_model_state is not None:
-        torch.save(best_model_state, str(alpha) + datetime.now().strftime(("%Y_%m_%d %H_%M_%S")) + 'best_model.pth')
+        torch.save(best_model_state, 'Saved models/' + str(alpha) + datetime.now().strftime(("%Y_%m_%d %H_%M_%S")) + 'best_model.pth')
         print(f"Best model saved with mean cost: {best_mean_cost:.2f}")
     writer.close()
-    torch.save(model.state_dict(), str(alpha) + datetime.now().strftime(("%Y_%m_%d %H_%M_%S")) + 'last_model.pth')
+    torch.save(model.state_dict(), 'Saved models/' + str(alpha) + datetime.now().strftime(("%Y_%m_%d %H_%M_%S")) + 'last_model.pth')
     print("Training Finished")
     return model
 

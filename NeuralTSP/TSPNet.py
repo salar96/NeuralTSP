@@ -21,6 +21,11 @@ class Decoder(nn.Module):
 
     def forward(self, x, enc_outs, h0, c0, indices_to_ignore):
         # LSTM output
+        """ x: the vector of the next chosen city, dimension is input_dim
+            enc_outs: output of the encoder used in the attention to generate the probability of visiting the next city
+            h0,c0: first LSTM latent inputs,
+            idices_to_ignor: ignor the visited cities in the attention
+        """
         y, (hn, cn) = self.lstm(x, (h0, c0))  # y: (N, 1, d)
 
         # Create a mask for attention
@@ -34,7 +39,7 @@ class Decoder(nn.Module):
                 mask[i, indices_to_ignore[i]] = True
 
         # Apply attention with mask
-        _, attn_weights = self.attn(query=y, key=enc_outs, value=enc_outs, key_padding_mask=mask)  # Masked attention
+        _ , attn_weights = self.attn(query=y, key=enc_outs, value=enc_outs, key_padding_mask=mask)  # Masked attention
         attn_weights = attn_weights.squeeze(1)  # (N, L)
 
         return (hn, cn), attn_weights
@@ -50,13 +55,19 @@ class TSPNet(nn.Module):
         self.decoder = Decoder(hidden_dim, hidden_dim, Num_L_dec, num_heads).to(device)
         self.device = device
     def forward(self, X, mod = 'train'):
+        
+        """ Given an input city data X (batch_size, num_cities, dimension),
+        it returns  outs (batch_size, num_cities+1, num_cities) which is
+        pi(a_t|s_t) the policy: probability of visiting the next city
+        and action_indices (batch_size, num_cities+1, 1) which is the chosen
+        action a_t.
+        """
 
         batch_size, seq_length, _ = X.size()
 
         encoded_cities = self.encoder(X) # output shape: (batch_size, num_cities, hidden_dim)
 
         h0,c0 = torch.zeros(self.Num_L_dec, batch_size, self.hidden_dim).to(self.device), torch.zeros(self.Num_L_dec, batch_size, self.hidden_dim).to(self.device)
-        #indices_to_ignore = torch.cat((torch.zeros(batch_size,1),torch.zeros(batch_size,1)-1),dim=-1).long()
         
         start_token = nn.Parameter(torch.zeros(1, 1, self.hidden_dim))
         x_star = start_token.expand(batch_size, -1, -1).to(self.device)# the first input to the decoder is a vector we have to learn
@@ -68,22 +79,22 @@ class TSPNet(nn.Module):
         
         for t in range(seq_length+1):
             if t == seq_length:
-                indices_to_ignore = indices_to_ignore[:,1:]
+                indices_to_ignore = indices_to_ignore[:,1:] # now we can return to the first city we visited
             (hn,cn), attn_weights = self.decoder(x_star, encoded_cities, h0,c0, indices_to_ignore)
             attn_weights = torch.clamp(attn_weights, min=1e-9)
-            attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True)
+            attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True) # (N, L)
             if mod == 'train':
-                idx = torch.multinomial(attn_weights, num_samples=1).squeeze(-1)
+                idx = torch.multinomial(attn_weights, num_samples=1).squeeze(-1) # (N,)
             elif mod == 'eval':
-                idx = torch.argmax(attn_weights, dim=-1)
+                idx = torch.argmax(attn_weights, dim=-1) # (N,)
             else:
                 raise('wrong mode')
-            x_star = encoded_cities[torch.arange(batch_size), idx, :].unsqueeze(1)
+            x_star = encoded_cities[torch.arange(batch_size), idx, :].unsqueeze(1) # (N, 1, d)
             outs[:,t,:] = attn_weights
             action_indices[:,t,0] = idx
             h0,c0 = hn,cn
             if t==0:
-                indices_to_ignore = idx.unsqueeze(-1)
+                indices_to_ignore = idx.unsqueeze(-1) # (N,1)
             else:
                 indices_to_ignore = torch.cat((indices_to_ignore, idx.unsqueeze(-1)),dim=-1).long()
             

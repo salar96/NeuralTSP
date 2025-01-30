@@ -42,12 +42,12 @@ if __name__ == "__main__":
     print("Running on: " , device)
 
     lr = 0.001
-    batch_size = 128
-    num_episodes = 100000
+    batch_size = 64
+    num_episodes = 200000
     num_samples = batch_size * num_episodes
     num_cities = 50
     input_dim = 2
-    num_workers = 8  #
+    num_workers = 12  #
 
     data_loader = create_data_loader(batch_size, num_samples, num_cities, input_dim, num_workers=num_workers)
     preloaded_batches = preload_data(data_loader, device)
