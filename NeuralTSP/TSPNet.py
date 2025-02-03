@@ -5,7 +5,7 @@ class Encoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers):
         super(Encoder,self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.lstm = nn.LSTM(hidden_dim, hidden_dim, num_layers, batch_first=True, dropout= 0.2)
+        self.lstm = nn.LSTM(hidden_dim, hidden_dim, num_layers, batch_first=True, dropout= 0.3)
         
     def forward(self, x):
         y = self.fc1(x)
@@ -16,8 +16,8 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, num_heads):
         super(Decoder,self).__init__()
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first= True, dropout= 0.2)
-        self.attn = nn.MultiheadAttention(hidden_dim, num_heads, dropout= 0.2, batch_first= True)
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first= True, dropout= 0.3)
+        self.attn = nn.MultiheadAttention(hidden_dim, num_heads, dropout= 0.3, batch_first= True)
 
     def forward(self, x, enc_outs, h0, c0, indices_to_ignore):
         # LSTM output
@@ -85,7 +85,7 @@ class TSPNet(nn.Module):
             attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True) # (N, L)
             if mod == 'train':
                 idx = torch.multinomial(attn_weights, num_samples=1).squeeze(-1) # (N,)
-            elif mod == 'eval':
+            elif mod == 'eval_greedy':
                 idx = torch.argmax(attn_weights, dim=-1) # (N,)
             else:
                 raise('wrong mode')

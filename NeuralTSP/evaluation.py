@@ -2,7 +2,7 @@
 import torch
 from TSPNet import TSPNet
 from matplotlib import pyplot as plt
-from utils import route_cost
+from utils import *
 import os
 import matplotlib.pyplot as plt
 
@@ -58,14 +58,33 @@ if __name__ == "__main__":
     num_layers = 2
     num_heads = 1
     input_dim = 2
-
+    num_data = 20
+    num_cities = 50
+    city_dim = 2
+    mod = 'eval_sampling'
+    num_samples = 50
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Running on: " , device)
 
     model = TSPNet(input_dim, hidden_dim, device, num_layers, num_layers, num_heads)
-    model.load_state_dict(torch.load('Saved models/0.12025_01_29 13_58_58best_model.pth'))
+    model.load_state_dict(torch.load('Saved models/0.12025_02_02 20_47_49best_model.pth'))
     model.eval()
     print('model loaded')
-    data = torch.rand(10,200,2).to(device)
-    _, actions = model(data,mod='eval')
-    plot_routes(data.cpu(),actions.cpu(),torch.arange(10))
+    data = torch.rand(num_data,num_cities,city_dim).to(device)
+    # data = USA_data.to(device)
+    num_data , num_cities , city_dim = data.shape
+    if mod == 'eval_greedy':
+        _, actions = model(data, mod='eval_greedy')
+    elif mod == 'eval_sampling':
+        all_samples = torch.zeros(num_data, num_cities+1, num_samples).to(device)
+        for i in range(num_samples):
+            _, actions = model(data, mod='train')
+            all_samples[:,:,i:i+1] = actions
+        opt_sample_indices = []
+        for data_idx in range(num_data):
+            costs_for_data = [route_cost(data[data_idx:data_idx+1],all_samples[data_idx:data_idx+1,:,sample_idx]) for sample_idx in range(num_samples)]
+            opt_sample_index = torch.argmin(torch.tensor(costs_for_data)).long()
+            opt_sample_indices.append(opt_sample_index)
+        opt_sample_indices = torch.tensor(opt_sample_indices)
+        actions = all_samples[torch.arange(num_data),:,opt_sample_indices]
+    plot_routes(data.cpu(),actions.cpu(),torch.arange(len(data)))
