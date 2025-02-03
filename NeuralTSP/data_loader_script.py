@@ -23,7 +23,6 @@ def create_data_loader(batch_size, num_samples, num_cities, input_dim, num_worke
         shuffle=True,
         num_workers=num_workers,
         pin_memory=True,
-        prefetch_factor=2
     )
     return data_loader
 

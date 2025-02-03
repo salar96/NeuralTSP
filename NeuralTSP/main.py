@@ -42,8 +42,8 @@ if __name__ == "__main__":
     print("Running on: " , device)
 
     lr = 0.001
-    batch_size = 128
-    num_episodes = 100000
+    batch_size = 64
+    num_episodes = 250000
     num_samples = batch_size * num_episodes
     num_cities = 50
     input_dim = 2
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     hidden_dim = 128
     num_layers = 2
-    num_heads = 1
+    num_heads = 4
 
     model = TSPNet(input_dim, hidden_dim, device, num_layers, num_layers, num_heads)
     print(model.device)
