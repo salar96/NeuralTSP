@@ -35,8 +35,9 @@ class Decoder(nn.Module):
 
         # Set True for indices to ignore
         if not indices_to_ignore is None:
-            for i in range(N):
-                mask[i, indices_to_ignore[i]] = True
+            # for i in range(N):
+            #     mask[i, indices_to_ignore[i]] = True
+            mask[torch.arange(N).unsqueeze(1), indices_to_ignore] = True
 
         # Apply attention with mask
         _ , attn_weights = self.attn(query=y, key=enc_outs, value=enc_outs, key_padding_mask=mask)  # Masked attention
