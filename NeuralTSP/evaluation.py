@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from utils import *
 import os
 import matplotlib.pyplot as plt
-
+from torchinfo import summary
 def plot_routes(cities, routes, index_range, save_folder='plots'):
     """
     Plots the routes for a range of indices and saves the plots in a folder.
@@ -56,7 +56,7 @@ def plot_routes(cities, routes, index_range, save_folder='plots'):
 if __name__ == "__main__":
     hidden_dim = 128
     num_layers = 2
-    num_heads = 1
+    num_heads = 2
     input_dim = 2
     num_data = 20
     num_cities = 50
@@ -70,6 +70,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load('Saved models/0.12025_02_02 20_47_49best_model.pth'))
     model.eval()
     print('model loaded')
+    print(summary(model))
     data = torch.rand(num_data,num_cities,city_dim).to(device)
     # data = USA_data.to(device)
     num_data , num_cities , city_dim = data.shape

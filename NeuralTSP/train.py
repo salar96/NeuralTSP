@@ -1,13 +1,13 @@
 from tqdm import tqdm
 import torch
 from torch import optim
-from utils import route_cost
+from utils import *
 from datetime import datetime
 from torch_optimizer import RAdam
 
 
 
-def train(model, preloaded_batches, writer, lr = 0.001, len_print = 100, use_base = True, alpha = 0.9):
+def train(model, preloaded_batches, writer, lr = 0.001, len_print = 100, use_base = True, alpha = 0.9, check_params = False):
     device = model.device
     # optimizer = optim.Adam(model.parameters(), lr=lr)
     optimizer = RAdam(model.parameters(), lr=lr)
@@ -34,7 +34,12 @@ def train(model, preloaded_batches, writer, lr = 0.001, len_print = 100, use_bas
         optimizer.zero_grad()
         policy_loss.backward()
         optimizer.step()
+        if check_params:
+              check_model_weights(model)
+              check_gradients(model)
+        
         if episode % len_print == len_print - 1:
+            
             mean_cost = batch_means.mean().item()
             if alpha == -1:
               alpha_t = episode/(episode+1)

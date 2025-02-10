@@ -43,9 +43,26 @@ def generate_unit_circle_cities(B, N, d):
     result[:,0,:] = result[:,-1,:]
     return result
 
+def check_model_weights(model, large_value_threshold=1e6):
+    for name, param in model.named_parameters():
+        # Check for NaN
+        if torch.isnan(param).any():
+            print(f"NaN detected in parameter: {name}")
+        
+        # Check for large values
+        if torch.any(torch.abs(param) > large_value_threshold):
+            print(f"Large value detected in parameter: {name}, max value: {param.abs().max().item()}")
 
-
-
+def check_gradients(model, large_grad_threshold=1e6):
+    for name, param in model.named_parameters():
+        if param.grad is not None:
+            # Check for NaN in gradients
+            if torch.isnan(param.grad).any():
+                print(f"NaN detected in gradient of parameter: {name}")
+            
+            # Check for large gradient values
+            if torch.any(torch.abs(param.grad) > large_grad_threshold):
+                print(f"Large gradient detected in parameter: {name}, max gradient: {param.grad.abs().max().item()}")
 
 
 coordinates = [
