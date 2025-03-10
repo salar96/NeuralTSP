@@ -109,8 +109,9 @@ class Decoder(nn.Module):
         return out
 
 class TSPNet(nn.Module):
-    def __init__(self, input_dim, hidden_dim, device, num_enc_layers=3, num_dec_layers=3, num_heads=8, dropout=0.3, use_PE=True):
+    def __init__(self, input_dim, hidden_dim, device, num_enc_layers=3, num_dec_layers=3, num_heads=8, dropout=0.3, use_PE=False):
         super(TSPNet, self).__init__()
+        print("Loading TF model with PE in encoder: ", use_PE)
         self.hidden_dim = hidden_dim
         self.device = device
 
@@ -122,7 +123,8 @@ class TSPNet(nn.Module):
 
         # Start token
         self.start_token = nn.Parameter(torch.zeros(1, 1, hidden_dim)).to(device)
-
+        self.init_args = {'input_dim': input_dim, 'hidden_dim': hidden_dim, 'device': device, 'num_enc_layers':num_enc_layers,
+                          'num_dec_layers':num_dec_layers, 'num_heads':num_heads, 'dropout': dropout, 'use_PE':use_PE}
         # Output projection
 
     def generate_square_subsequent_mask(self, sz):

@@ -25,7 +25,20 @@ def create_data_loader(batch_size, num_samples, num_cities, input_dim, num_worke
         pin_memory=True,
     )
     return data_loader
+def create_evaluation_loader(num_samples, num_cities, input_dim, batch_size, num_workers=4):
+   
+    # Create the evaluation dataset
+    eval_dataset = TSPSyntheticDataset(num_samples=num_samples, num_cities=num_cities, input_dim=input_dim)
 
+    # Create the DataLoader
+    eval_loader = DataLoader(
+        eval_dataset,
+        batch_size=batch_size,
+        shuffle=False,  # No shuffling for evaluation
+        num_workers=num_workers,
+        pin_memory=True,  # Pin memory for faster GPU transfer
+    )
+    return eval_loader
 if __name__ == "__main__":
     # This part runs only if the script is executed directly
     print("Testing DataLoader...")

@@ -1,7 +1,7 @@
 
 from utils import route_cost, generate_unit_circle_cities
 from TSPNet_TF import TSPNet
-from data_loader_script import create_data_loader
+from data_loader_script import *
 from train import train
 import torch
 from datetime import datetime
@@ -9,8 +9,10 @@ import torch.multiprocessing as mp
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 from torchinfo import summary
-
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 mp.set_start_method('spawn', force=True)
+torch.cuda.empty_cache()
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -51,13 +53,19 @@ if __name__ == "__main__":
     num_workers = 8  #
 
     data_loader = create_data_loader(batch_size, num_samples, num_cities, input_dim, num_workers=num_workers)
-    preloaded_batches = preload_data(data_loader, device)
+    eval_loader = create_evaluation_loader(
+    num_samples=1024,
+    num_cities=num_cities,
+    input_dim=input_dim,
+    batch_size=32,
+    num_workers=num_workers
+)
 
     run_name = 'TSP/' + str(batch_size) + '_' + str(num_cities) + '_' + str(num_samples) + '_' + '/ANN/'+datetime.now().strftime(("%Y_%m_%d %H_%M_%S"))+ str(args.use_base) + str(args.alpha)
     writer = SummaryWriter(log_dir=run_name)
 
 
-    hidden_dim = 64
+    hidden_dim = 128
     num_layers = 3
     num_heads = 8
 
@@ -65,6 +73,6 @@ if __name__ == "__main__":
     print(model.device)
     print(summary(model))
 
-    trained = train(model, preloaded_batches, writer, lr, use_base = args.use_base, alpha=args.alpha)
+    trained = train(model, data_loader, eval_loader, writer, lr,len_print=10)
 
 

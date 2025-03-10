@@ -67,12 +67,12 @@ if __name__ == "__main__":
     print("Running on: " , device)
 
     model = TSPNet(input_dim,hidden_dim,device,num_heads=num_heads,num_enc_layers=num_layers,num_dec_layers=num_layers,use_PE=False)
-    model.load_state_dict(torch.load('Saved models/star_6.36_0.12025_02_05 16_44_52best_model.pth'))
+    model.load_state_dict(torch.load('Saved models/0.12025_02_13 23_43_2626.101144790649414best_model.pth',weights_only=True))
     model.eval()
     print('model loaded')
-    print(summary(model))
-    data = torch.rand(num_data,num_cities,city_dim).to(device)
-    # data = USA_data.to(device)
+    
+    # data = torch.rand(num_data,num_cities,city_dim).to(device)
+    data = USA_data.to(device)
     num_data , num_cities , city_dim = data.shape
     if mod == 'eval_greedy':
         _, actions = model(data, mod='eval_greedy')

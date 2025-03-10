@@ -1,7 +1,44 @@
 import math
 import torch
 
+import torch
+from scipy.stats import ttest_rel
 
+def is_paired_ttest_significant(tensor1, tensor2, alpha=0.05):
+    """
+    Perform a one-sided paired t-test to check if tensor1 is significantly smaller than tensor2.
+
+    Args:
+        tensor1 (torch.Tensor): 1D tensor of values.
+        tensor2 (torch.Tensor): 1D tensor of values (same length as tensor1).
+        alpha (float): Significance level (default is 0.05).
+
+    Returns:
+        bool: True if the p-value for the one-sided test is below alpha, False otherwise.
+    """
+    # Ensure inputs are 1D tensors of the same length
+    if tensor1.ndim != 1 or tensor2.ndim != 1:
+        raise ValueError("Both tensors must be 1-dimensional.")
+    if len(tensor1) != len(tensor2):
+        raise ValueError("Both tensors must have the same length.")
+
+    # Convert tensors to numpy arrays
+    array1 = tensor1.cpu().numpy()
+    array2 = tensor2.cpu().numpy()
+
+    # Perform the paired t-test
+    t_stat, p_value_two_sided = ttest_rel(array1, array2)
+
+    # Adjust for one-sided test (assuming we test if tensor1 < tensor2)
+    if t_stat > 0:
+        # If the mean of tensor1 is greater than tensor2, the one-sided p-value is 1 - p/2
+        p_value_one_sided = 1 - (p_value_two_sided / 2)
+    else:
+        # If the mean of tensor1 is smaller than tensor2, the one-sided p-value is p/2
+        p_value_one_sided = p_value_two_sided / 2
+
+    # Check if the one-sided p-value is below the significance level
+    return p_value_one_sided < alpha
 def route_cost(cities, routes):
     B, N, _ = cities.shape
     routes = routes.squeeze(-1).long()  # Convert to long for indexing
